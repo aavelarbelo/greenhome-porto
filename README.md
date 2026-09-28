@@ -1,134 +1,156 @@
-# Energy Value Index Porto
+# GreenHome Porto
 
-![Python](https://img.shields.io/badge/Python-3.11-3776AB?style=flat-square&logo=python&logoColor=white)
-![PostgreSQL](https://img.shields.io/badge/PostgreSQL-Aiven-336791?style=flat-square&logo=postgresql&logoColor=white)
-![Power BI](https://img.shields.io/badge/Power%20BI-Dashboard-F2C811?style=flat-square&logo=powerbi&logoColor=black)
-![SDG 11](https://img.shields.io/badge/UN%20SDG-11%20Sustainable%20Cities-4C9F38?style=flat-square)
-![Status](https://img.shields.io/badge/Status-In%20active%20development-orange?style=flat-square)
+**Pipeline de dados end-to-end que cruza anúncios imobiliários com certificação energética para medir se a eficiência energética se reflete no preço da habitação no Porto.**
 
-**An end-to-end Data Engineering project that turns fragmented public real-estate
-data into a reliable, geographically-disaggregated Energy Value Index for the city
-of Porto.**
-
-The goal is not a dashboard, it is a **pipeline**: taking messy, unreliable public
-data and making it clean, traceable and decision-ready, from ingestion to reporting.
-The project investigates how the energy efficiency of a property relates to its
-market value, and surfaces rehabilitation opportunities, aligned with
-**UN SDG 11 (Sustainable Cities and Communities)**.
+> **Estado:** 🚧 Em construção — etapa atual: **recolha de dados**.
+> Este README descreve o que existe e marca como *planeado* o que ainda não foi construído.
 
 ---
 
-## From academic project to personal Data Engineering project
+## 1. Visão geral
 
-**UrbanEco** started as a group academic project in the Big Data postgraduate
-programme at **ISEP (2026)**, where I led the data-engineering work. This
-repository, **energy-value-index-porto**, is my **individual continuation**,
-developed with the original team's permission ([origin repository, archived](https://github.com/aavelarbelo/urbaneco-analytics)).
+### O problema
+Em Portugal, a classe energética tem de constar de qualquer anúncio de venda de habitação — a informação existe, imóvel a imóvel. Mas está dispersa pelos portais e raramente é analisada de forma estruturada. Sem esse cruzamento, compradores, vendedores e financiadores decidem sem saber se a eficiência energética vale, ou não, dinheiro.
 
-The purpose of this continuation is deliberate: take the working prototype and
-**re-engineer it into a production-minded Data Engineering pipeline** that I can
-run, test, explain and defend, end to end. This README describes what the academic
-phase achieved, what I am evolving now, and where it is heading.
+### A pergunta (v1)
+**No Porto, o preço por m² pedido nos anúncios de habitação varia com a classe energética — e essa diferença mantém-se quando se compara dentro da mesma freguesia e tipologia?**
+
+### Porquê importa
+Se a eficiência energética se refletir no preço, é um fator de valor que o mercado já está a pagar. Para a banca é também uma questão de risco: com a revisão europeia da diretiva de desempenho energético dos edifícios (EPBD) e as exigências de reporte ESG, imóveis ineficientes podem desvalorizar — e esses imóveis são garantia de crédito à habitação.
+
+### Âmbito
+
+| Incluído (v1) | Fora do âmbito (v1) |
+|---|---|
+| Anúncios de venda de habitação no concelho do Porto | Outros concelhos |
+| Preço pedido, área, tipologia, freguesia, classe energética | Preços de transação (escrituras) |
+| Pipeline batch, execução manual | Recolha em tempo real / orquestração |
 
 ---
 
-## 1. Where UrbanEco reached (the academic foundation)
-
-The data-engineering layer of the original project was my work, and it is the
-foundation this repository builds on:
-
-- **Ingestion** — a multi-page **Selenium** scraper of public SuperCasa listings,
-  scaled to **~2,776 analysed properties across 7 civil parishes (*freguesias*)**
-  of Porto, with source traceability and de-duplication.
-- **Standardization** — cleaned prices (€), areas (m²), price per m² and boolean
-  amenities, with raw and validated bases kept separate.
-- **Storage** — a 24-variable schema on **PostgreSQL (Aiven Cloud)**.
-- **Energy Value Index (EVI, v1)** — a composite 1–10 score, Energy Score (55%) +
-  Price Score (45%); dataset median 6.7.
-- **Green Index** — a per-parish score from parks, Metro, cycle lanes and Mobi.E
-  points (Open Data CMP).
-- **Initial dashboard** — a first Power BI model connected to the database.
-
-## 2. What I am evolving now (this repository)
-
-Turning that prototype into a real, defensible pipeline. The focus is engineering
-quality, not adding technologies for show:
-
-- A clear **Medallion ETL structure** (Raw → Silver → Gold) with explicit stages.
-- **Data quality & validation** — validation rules and quarantine of invalid records.
-- **Reliability** — error handling, logging, and **idempotent** runs (re-running
-  without duplicating or corrupting data).
-- **Automated tests** for the transformations and data-quality rules.
-- **Docker / docker-compose** for a reproducible database and pipeline.
-- Fixing known issues from the prototype (e.g. the `€/m²` aggregation: replacing a
-  direct `SUM(€/m²)` with a calculated `€/m²_clean` column and an outlier filter,
-  500–25,000 €/m²).
-- **Power BI** finalised as four analytical pages (market profile, EVI ranking,
-  reliability & data quality, incident investigation).
-- **Documentation** — data dictionary, technical decision log, run instructions.
-
-## 3. Architecture
+## 2. Arquitetura (planeada)
 
 ```mermaid
 flowchart LR
-    A[Public sources] --> B[Selenium ingestion]
-    B --> C[RAW layer\nCSV / PostgreSQL]
-    C --> D[Standardization + Data Quality\nSilver]
-    D --> E[EVI + Green Index\nGold]
-    E --> F[Power BI dashboard]
+    A[Portal de anúncios] --> B[Scraper<br/>Python]
+    B --> C[(raw<br/>CSV datado)]
+    C --> D[Limpeza e validação<br/>Pandas]
+    D --> E[(PostgreSQL)]
+    E --> F[Métricas e índice<br/>SQL]
+    F --> G[Power BI]
 ```
 
-## 4. Tech stack (honest)
+- **Padrão:** camadas *raw → processed → analytics* (inspirado na arquitetura medallion), processamento **batch**.
+- **Porquê batch:** os anúncios mudam devagar e a pergunta é analítica, não operacional — recolhas pontuais chegam.
 
-**Core:** Python (Selenium, Pandas) · SQL · PostgreSQL (Aiven) · Power BI · Docker · Git
-**Being added, with purpose:** pytest (tests) · GitHub Actions (CI)
-**Deliberately out of scope:** Kafka, Airflow, Spark, Terraform, Kubernetes — this
-project does not have the volume or complexity to justify them, and I would rather
-demonstrate an end-to-end pipeline I fully understand than stack tools I cannot defend.
+---
 
-## 5. Roadmap
+## 3. Stack
 
-Legend: ✅ done (from the academic phase, being migrated) · 🚧 in progress · 🔲 planned
-
-| Phase | Focus | Status |
+| Tecnologia | Para quê | Estado |
 |---|---|---|
-| 0 | Ingestion (Selenium, multi-page) | ✅ |
-| 1 | Standardization & cleaning | 🚧 |
-| 2 | PostgreSQL schema & dimensional modeling | 🚧 |
-| 3 | Medallion ETL (Raw → Silver → Gold) | 🔲 |
-| 4 | Data quality, validation & quarantine | 🔲 |
-| 5 | Tests, logging, error handling, idempotency | 🔲 |
-| 6 | Docker / reproducible environment | 🔲 |
-| 7 | EVI + Green Index (Gold), weight calibration | 🚧 |
-| 8 | Power BI — 4 analytical pages | 🚧 |
-| 9 | CI (GitHub Actions) | 🔲 |
-| 10 | Documentation & presentation | 🚧 |
+| Python 3.11 | Recolha e transformação | planeado |
+| requests + BeautifulSoup ou Selenium | Scraping (conforme o portal) | a decidir |
+| Pandas | Limpeza e validação | planeado |
+| PostgreSQL | Armazenamento e consultas SQL | planeado |
+| Power BI | Visualização | planeado |
+| Git / GitHub | Versionamento | ✅ em uso |
 
-## 6. Data & method caveats
+---
 
-- Prices are **asking prices** (listings), not transaction prices, stated for
-  methodological transparency.
-- Scope is the **municipality of Porto** (7 freguesias).
-- Where public data was incomplete, some attributes are **synthetic** and flagged
-  as such in the data dictionary.
-- The EVI is an **interpretive index**, not a causal claim between energy
-  performance and market value.
+## 4. Estrutura do repositório (alvo)
 
-## 7. Authorship & ethics
+```
+greenhome-porto/
+├── data/
+│   ├── raw/          # snapshots brutos, com data de recolha (nunca editados)
+│   └── processed/    # dados limpos e validados
+├── src/
+│   ├── ingestion/    # scraper
+│   ├── processing/   # limpeza e validação
+│   └── analytics/    # métricas e índice
+├── sql/              # criação de tabelas e consultas
+├── tests/            # testes
+├── docs/             # dicionário de dados e decisões
+├── .env.example      # variáveis de ambiente (sem valores reais)
+├── requirements.txt
+├── WORKLOG.md        # registo de progresso
+└── README.md
+```
 
-- **Origin:** group academic project, Big Data postgraduate, ISEP (2026).
-- **This repository:** my individual continuation, developed with the team's
-  permission, re-engineering the pipeline end to end.
-- **My role in the original project:** I led the data engineering — the Selenium
-  ingestion, standardization, the PostgreSQL/Aiven database, the EVI and Green
-  Index, and the initial dashboard.
-- **AI as a tool:** AI assistants are used to accelerate development. Every
-  component in this repository is one I can run, explain, and modify.
+> As pastas são criadas quando a etapa correspondente começa.
 
-## 8. Setup
+---
 
-> Being finalised alongside the Docker setup and the reproducible run script
-> (see Roadmap). High-level flow: create a Python 3.11 environment, install
-> `requirements.txt`, copy `.env.example` to `.env` and set the database
-> credentials, start the database with `docker compose up -d`, run the ingestion
-> and transformation steps, then open the Power BI report connected to the database.
+## 5. Dados
+
+**Fonte:** [SuperCasa](https://supercasa.pt) (anúncios de venda de habitação) — recolha respeitando os termos de utilização e o `robots.txt` do site.
+
+### Dicionário de dados (proposta v1)
+
+| Campo | Tipo | Descrição |
+|---|---|---|
+| `url` | texto | Endereço do anúncio (identificador único) |
+| `data_recolha` | data | Dia em que o anúncio foi recolhido |
+| `preco` | número (€) | Preço pedido |
+| `area_m2` | número | Área útil |
+| `preco_m2` | número (€/m²) | `preco / area_m2` (calculado) |
+| `tipologia` | texto | T0, T1, T2… |
+| `freguesia` | texto | Freguesia do Porto |
+| `classe_energetica` | texto | A+ a F |
+
+### Regras de qualidade (v1)
+
+- `url` único (sem duplicados)
+- `preco` e `area_m2` maiores que zero
+- `classe_energetica` ∈ {A+, A, B, B-, C, D, E, F}
+- `preco_m2` dentro de um intervalo plausível (limites definidos na etapa de limpeza e documentados em `docs/`)
+- Registos que falham uma regra são contados e reportados, não apagados em silêncio
+
+---
+
+## 6. Como executar
+
+> Disponível quando a primeira etapa (scraper) estiver concluída.
+
+```bash
+git clone https://github.com/aavelarbelo/greenhome-porto.git
+cd greenhome-porto
+python -m venv .venv
+.venv\Scripts\activate        # Windows
+pip install -r requirements.txt
+copy .env.example .env        # preencher com as credenciais locais
+```
+
+**Segurança:** credenciais (base de dados, chaves de API) vivem só no `.env`, que está no `.gitignore` e nunca é publicado.
+
+---
+
+## 7. Roadmap
+
+- [x] Definição da pergunta e do âmbito
+- [ ] Scraper (uma fonte, poucas freguesias)
+- [ ] Snapshot bruto datado
+- [ ] Limpeza e validação (com relatório de qualidade)
+- [ ] Base PostgreSQL (schema, carga, consultas)
+- [ ] Índice (fórmula simples e justificada)
+- [ ] Dashboard Power BI
+- [ ] Testes automáticos das regras de qualidade
+
+---
+
+## 8. Limitações conhecidas
+
+- Os preços são **pedidos** (anúncios), não preços de venda.
+- A amostra depende do que o portal publica — não representa todo o mercado.
+- A análise mostra **associação**, não causalidade: uma casa eficiente pode ser mais cara por outras razões (localização, idade, estado).
+
+---
+
+## Origem e autoria
+
+A ideia nasceu de um trabalho de grupo da Pós-Graduação em Big Data & Decision Making (ISEP, 2026). Esta versão é individual e reconstruída de raiz: recolha, modelação e análise próprias.
+
+**Autora:** Andressa Avelar Belo — [LinkedIn](https://linkedin.com/in/andressaavelar) · [GitHub](https://github.com/aavelarbelo)
+
+**Licença:** MIT
