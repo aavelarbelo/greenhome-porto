@@ -1,0 +1,23 @@
+# Ambiente virtual
+.venv/
+
+# Dados (grandes e regeneráveis) — exceto a amostra e os .gitkeep
+data/**
+!data/**/
+!data/**/.gitkeep
+!data/sample/**
+
+# Segredos
+.env
+
+# Lixo do Python e do Jupyter
+__pycache__/
+*.pyc
+.ipynb_checkpoints/
+
+# Logs
+logs/
+
+# Sistema e editor
+Thumbs.db
+.vscode/
