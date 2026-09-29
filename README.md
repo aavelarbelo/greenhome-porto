@@ -49,7 +49,7 @@ flowchart LR
 
 | Tecnologia | Para quê | Estado |
 |---|---|---|
-| Python 3.11 | Recolha e transformação | planeado |
+| Python 3.13 | Recolha e transformação | planeado |
 | requests + BeautifulSoup ou Selenium | Scraping (conforme o portal) | a decidir |
 | Pandas | Limpeza e validação | planeado |
 | PostgreSQL | Armazenamento e consultas SQL | planeado |
