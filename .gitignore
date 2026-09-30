@@ -1,11 +1,11 @@
 # Ambiente virtual
 .venv/
 
-# Dados (grandes e regeneráveis) — exceto a amostra e os .gitkeep
+# Dados (grandes e regeneráveis), exceto os .gitkeep
 data/**
 !data/**/
 !data/**/.gitkeep
-!data/sample/**
+
 
 # Segredos
 .env
