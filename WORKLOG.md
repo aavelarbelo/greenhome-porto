@@ -1,24 +1,28 @@
 # WORKLOG — GreenHome Porto
 
-Fonte única de contexto do projeto. 
+Fonte única de contexto do projeto. Se mudar de conversa ou ferramenta, colar este ficheiro para retomar.
+
 ---
 
-## ⏸️ Onde parámos (2026-09-30)
+## ⏸️ Onde parámos (2026-09-30, fim do dia)
 
-A D8 foi aplicada: a estrutura de pastas segue a secção 4 do README. Commit `5748519` no GitHub.
-Próximo: `WORKLOG.md` e `requirements.txt` no repositório, depois o diagnóstico do scraper.
+O diagnóstico foi executado pela 1.ª vez e **o SuperCasa bloqueia o Selenium** com um anti-bot ("Executando verificação de segurança"). O scraper original do UrbanEco também é bloqueado: o problema é do site e não do código.
+Não contornamos a proteção (D10). O Idealista está excluído (não permite recolha).
+Existe um dataset de junho de 2026 (`DataSet_Scraping_FINAL.xlsx`). A **D11 está proposta, mas não decidida**: usá-lo como fonte oficial. Antes de decidir, avaliamos a qualidade do dataset.
 
-## ▶️ Próxima sessão (por esta ordem, um passo de cada vez)
+## ▶️ Próxima sessão (um passo de cada vez)
 
-1. [x] Rotina de início: entrar na pasta, ativar o `.venv`, confirmar `(.venv)` e `python --version` 3.13.3
-2. [x] Aplicar a D8: remover `data/interim`, `data/sample`, `src/greenhome`, `scripts`, `notebooks`, `reports`; criar `src/ingestion`; tirar `!data/sample/**` do `.gitignore`
-3. [x] `git ls-files` para confirmar (8 ficheiros); commit `5748519` + push
-4. [ ] Guardar este `WORKLOG.md` na raiz do projeto (ao lado do `README.md`)
-5. [ ] `pip freeze | Out-File -Encoding utf8 requirements.txt` (não usar `>`, que no PowerShell 5 grava em UTF-16)
-6. [ ] `git add WORKLOG.md requirements.txt` → commit → push
-7. [ ] Localizar o `diagnostico_supercasa.py` (Downloads ou uma pasta GreenHome antiga) e movê-lo para `src/ingestion/`. Deixar de usar qualquer pasta GreenHome antiga.
-8. [ ] Só depois: primeira execução do diagnóstico com o site real
-9. [ ] (Mais tarde) Perfil do GitHub: a secção "Featured" chama ao projeto "UrbanEco" e o link aponta para `energy-value-index-porto`. Corrigir para "GreenHome Porto".
+1. [ ] Rotina de início (pasta, `.venv`, `python --version` 3.13.3)
+2. [ ] Copiar `DataSet_Scraping_FINAL.xlsx` para `data/raw/` (gitignored; nunca vai para o GitHub, D10)
+3. [ ] Avaliar a qualidade do dataset, antes de decidir a D11:
+   - Qual é o separador mais próximo do original (`Dataset_geral`, `Dataset_geralV2`, `PivotDatasetV2`) e o que mudou entre eles?
+   - Número de linhas, duplicados por `url`, valores em falta por coluna
+   - `classe_Energética`: distribuição de valores, ausentes e sinais do bug da regex (excesso de "E"?) → D6
+   - `area_ut` vs `area_br`: preenchimento e coerência (útil ≤ bruta?) → D4
+   - Há data de recolha por linha? → D3/D5
+   - Proveniência: que script gerou o dataset? (provavelmente `scrape_supercasa.py` no arquivo do UrbanEco, ainda não revisto)
+4. [ ] Decidir a D11 com base na avaliação
+5. [ ] (Mais tarde) Perfil do GitHub: a secção "Featured" chama ao projeto "UrbanEco" e o link aponta para `energy-value-index-porto`. Corrigir para "GreenHome Porto".
 
 ## Rotina de início de sessão
 
@@ -31,10 +35,11 @@ python --version   # tem de dizer 3.13.3
 ## Regras de trabalho
 
 - Uma única conversa de orientação (Claude). Este ficheiro é o backup do contexto.
-- Um passo de cada vez. Antes de cada comando: onde, em que pasta, o que faz e o resultado esperado.
-- O README é o documento de referência do projeto: a prática segue o README, não o contrário.
+- **Um único passo por mensagem.** Começa com uma frase: em que passo estamos e o que vamos fazer. Espera pela confirmação antes de avançar.
+- Antes de cada comando: onde, em que pasta, o que faz e o resultado esperado.
 - As edições de ficheiros são explicadas com o rato (por exemplo, "três cliques na linha e escreve por cima"), não com atalhos de teclado.
-- Verificar antes de alterar (por exemplo, listar o conteúdo antes de apagar).
+- Verificar antes de alterar (listar antes de apagar, `git diff` antes do commit).
+- O README é o documento de referência: a prática segue o README, não o contrário.
 
 ---
 
@@ -43,65 +48,61 @@ python --version   # tem de dizer 3.13.3
 | # | Decisão | Porquê | Estado | Data |
 |---|---|---|---|---|
 | D1 | Todo o código novo vive no GreenHome. O UrbanEco (`C:\dev\archive\urbaneco-analytics`) é só consulta. | Separar o projeto novo do antigo e preservar os originais. | ✅ | 2026-09-29 |
-| D2 | Um componente do UrbanEco só é reaproveitado depois de explicado e verificado. | O scraper antigo tem erros conhecidos. Perceber antes de reutilizar. | ✅ | 2026-09-29 |
-| D3 | O raw guarda os valores originais com data de recolha e nunca é substituído. | Permite repetir a limpeza a partir da origem. Corrige o problema do UrbanEco. | ✅ | 2026-09-29 |
-| D4 | A área do anúncio é útil ou bruta? O README define `area_m2` como área útil: o diagnóstico tem de confirmar se o site a mostra. | Muda o significado do €/m². | ⏳ | |
+| D2 | Um componente do UrbanEco só é reaproveitado depois de explicado e verificado. | O scraper antigo tem erros conhecidos. | ✅ | 2026-09-29 |
+| D3 | O raw guarda os valores originais com data de recolha e nunca é substituído. | Permite repetir a limpeza a partir da origem. | ✅ | 2026-09-29 |
+| D4 | A área do anúncio é útil ou bruta? O README define `area_m2` como área útil. O dataset de junho tem `area_ut` e `area_br` em colunas separadas, o que pode resolver a D4. | Muda o significado do €/m². | ⏳ | |
 | D5 | Distinguir um duplicado por erro do mesmo anúncio observado noutra recolha. | Necessário para o histórico. | ⏳ | |
-| D6 | Quantos imóveis têm classe energética real (não ausente nem mal extraída)? | Crítico para responder à pergunta do projeto. | ⏳ | |
-| D7 | Python 3.13.3 no `.venv`. | Estável para selenium, pandas e psycopg. A 3.14 (padrão do Windows) não é usada. O README já diz 3.13. | ✅ | 2026-09-29 |
-| D8 | A estrutura de pastas segue integralmente a secção 4 do README. As pastas são criadas quando a etapa correspondente começa (`src/processing`, `src/analytics` e `.env.example` ficam para mais tarde). | O README é o documento de referência. A estrutura anterior vinha de um modelo genérico (Cookiecutter Data Science). | ✅ | 2026-09-30 |
-| D9 | Organização geral do PC: `C:\dev\` com `projects`, `learning`, `archive`, `scratch`. | Um sítio fixo para cada coisa, caminhos curtos e sem espaços, fora do OneDrive. | ✅ | 2026-09-29 |
-
-### Estrutura atual no Git (após a D8)
-
-```
-.gitignore
-README.md
-data/processed/.gitkeep
-data/raw/.gitkeep
-docs/.gitkeep
-sql/.gitkeep
-src/ingestion/.gitkeep
-tests/.gitkeep
-```
+| D6 | Quantos imóveis têm classe energética real (não ausente nem mal extraída)? | Crítico para a pergunta do projeto. | ⏳ | |
+| D7 | Python 3.13.3 no `.venv`. | Estável para selenium, pandas e psycopg. A 3.14 não é usada. | ✅ | 2026-09-29 |
+| D8 | A estrutura de pastas segue integralmente a secção 4 do README. As pastas são criadas quando a etapa começa. | O README é o documento de referência. | ✅ | 2026-09-30 |
+| D9 | Organização geral do PC: `C:\dev\` com `projects`, `learning`, `archive`, `scratch`. | Um sítio fixo para cada coisa. | ✅ | 2026-09-29 |
+| D10 | Uso ético e legal dos dados: recolha em pequena escala e com pausas; dados brutos só locais; publicação apenas de agregados; sem dados pessoais de anunciantes; sem treino de IA; **não contornar proteções anti-bot**. Email ao SuperCasa a pedir autorização: opcional, não enviado. | `robots.txt` (permite `/comprar-casas/`, `ai-train=no`) e Condições de Utilização (4.2 meios de obtenção, 4.3 n.º 8 dados pessoais, 7 base de dados, 12 uso pessoal). | ✅ | 2026-09-30 |
+| D11 | **Proposta:** usar o `DataSet_Scraping_FINAL.xlsx` (jun/2026) como fonte oficial, como "retrato do mercado em junho de 2026". A mudança de fonte fica documentada no README como uma descoberta de engenharia. O scraper não é apagado: fica como evidência. | O SuperCasa bloqueia a recolha automática e o Idealista não permite recolha. | ⏳ por decidir, depois da avaliação de qualidade | |
 
 ---
 
 ## Estado atual
 
 ### ✅ Concluído
-- Estrutura `C:\dev\` (projects, learning, archive, scratch)
-- Repositório clonado para `C:\dev\projects\greenhome-porto`
-- `.gitignore`: ignora `.venv/`, `data/**` exceto os `.gitkeep`, `.env`, `__pycache__/`, `*.pyc`, `.ipynb_checkpoints/`, `logs/`, `Thumbs.db`, `.vscode/`
-- Commits `3645893` (estrutura inicial) e `5748519` (D8), já no GitHub
-- `.venv` com Python 3.13.3 + selenium 4.49, webdriver-manager 4.1.2, pandas 3.0.6
-- UrbanEco copiado para `C:\dev\archive\urbaneco-analytics`. O original continua em `C:\2025 ISEP\8. Seminars\urbaneco-analytics`
-- Confirmado com `git log --all` que o `apikey.txt` e o `.env` do UrbanEco nunca foram para o Git
+- Estrutura `C:\dev\`, clone, `.gitignore`, `.venv` (3.13.3), `requirements.txt` (UTF-8)
+- Estrutura de pastas alinhada com o README (D8)
+- `src/ingestion/diagnostico_supercasa.py`: original (commit `5d4c1a9`) e versão corrigida (commit `0dbfb6d`): saída em `data/raw/diagnostico_supercasa/`, `--condicao novo|usado`, exige Python 3.13
+- URLs confirmadas no scraper original: novo = `.../porto/com-novo`, usado = `.../porto/com-bom-estado` (também existem `com-para-reformar` e `com-em-construcao`)
+- `robots.txt` e Condições de Utilização do SuperCasa verificados → D10
+- 1.ª execução do diagnóstico (`--condicao novo`): **bloqueado pelo anti-bot**. Evidências em `data/raw/diagnostico_supercasa/20260930T205926_487042Z_novo/`
 
 ### ⏳ Pendente
-- `WORKLOG.md` e `requirements.txt` no repositório
-- Colocar o script de diagnóstico em `src/ingestion/` e executá-lo pela primeira vez
-- D4, D5 e D6 (dependem do diagnóstico)
+- Avaliar a qualidade do dataset de junho e decidir a D11
+- D4, D5 e D6 (dependem da avaliação)
+- Rever o `scrape_supercasa.py` do arquivo do UrbanEco (proveniência do dataset)
 - Corrigir a secção "Featured" do perfil do GitHub
 
-## Problemas conhecidos do scraper do UrbanEco
+## Problemas conhecidos
+
+### Scraper do UrbanEco
 - Só lê os cartões da página de resultados, por isso ano, piso e casas de banho ficam sempre `None`.
 - A regex da classe energética apanha letras soltas (por exemplo, "garagem e varanda" é lido como E).
 - O "raw" já vem transformado, filtrado e sem duplicados, e é substituído em cada execução.
-- Não se sabe se a área é útil ou bruta.
+
+### Fontes de dados
+- **SuperCasa:** anti-bot ativo (confirmado em 30/09 com o diagnóstico e com o scraper original). O Selenium é detetado e não chega à página de anúncios.
+- **Idealista:** excluído (não permite recolha; já era assim no UrbanEco).
 
 ---
 
 ## Registo de sessões
 
 ### 2026-09-29
-- Diagnóstico do README e do scraper original (480 linhas). Criado o script de diagnóstico (247 linhas), apenas para diagnóstico e ainda não executado com o site real.
-- Organização do ambiente: `C:\dev\`, clone, `.gitignore`, `.venv` (3.13.3) e bibliotecas.
-- Commit `3645893` enviado para o GitHub.
+- Diagnóstico do README e do scraper original (480 linhas). Criado o script de diagnóstico (247 linhas).
+- Organização do ambiente: `C:\dev\`, clone, `.gitignore`, `.venv` (3.13.3). Commit `3645893`.
 - UrbanEco arquivado. Chaves verificadas: seguras.
-- Revisão do GitHub: a estrutura de pastas criada não corresponde à do README, e daí a decisão D8. O "Featured" do perfil está desatualizado.
-- **Aprendizagens:** no PowerShell o hífen faz parte do nome dos comandos (`Out-Null`, `-ItemType`). O `>>` indica um bloco por fechar. O `clone` traz do GitHub para o PC, e o `push` envia do PC para o GitHub. O venv é a "cozinha" do projeto.
+- Decisão D8 (estrutura do README).
+- **Aprendizagens:** no PowerShell o hífen faz parte do nome dos comandos. O `>>` indica um bloco por fechar. O `clone` traz do GitHub, o `push` envia para o GitHub. O venv é a "cozinha" do projeto.
 
 ### 2026-09-30
-- D8 aplicada: 6 pastas removidas com `git rm` (depois de confirmar que só tinham o `.gitkeep`), `src/ingestion` criada, exceção `!data/sample/**` retirada do `.gitignore`. Commit `5748519`.
-- **Aprendizagens:** o `git rm` apaga o ficheiro e deixa a remoção pronta para o commit. O Git não guarda pastas vazias, daí o `.gitkeep`. O `Get-Content` do PowerShell 5 mostra os acentos de ficheiros UTF-8 como "lixo", mas o ficheiro está bem (confirma-se no VS Code). Ficheiros vazios e iguais aparecem no commit como `rename`.
+- D8 aplicada (`5748519`). `WORKLOG.md` + `requirements.txt` (`90fdbb8`).
+- Script de diagnóstico: original (`5d4c1a9`) e revisão técnica com as correções 1, 2, 4 e 8 (`0dbfb6d`). A URL de "usado" que eu tinha deduzido estava errada e foi corrigida a partir do scraper original.
+- `robots.txt` e termos verificados → D10.
+- 1.ª execução do diagnóstico: bloqueado pelo anti-bot. O script parou e guardou as evidências, como previsto. Testes com o scraper original: também bloqueado.
+- Idealista confirmado como excluído. Encontrado o dataset de junho de 2026 → proposta D11.
+- **Aprendizagens:** o `git rm` apaga o ficheiro e deixa a remoção pronta para o commit. O Git não guarda pastas vazias (daí o `.gitkeep`). O `Get-Content` do PowerShell 5 mostra os acentos de UTF-8 como "lixo", mas o ficheiro está bem. Fazer commit do original antes da correção permite rever a correção com `git diff`. Confirmar dados (URLs) antes do commit evita gravar suposições. Um diagnóstico que falha com evidências é um sucesso: encontrou o problema real.
